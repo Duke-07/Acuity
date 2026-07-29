@@ -3,6 +3,8 @@ import { useDropzone } from 'react-dropzone';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 import { UploadCloud, Download, Loader2 } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 function App() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -45,7 +47,7 @@ function App() {
     formData.append('face_enhance', faceEnhance);
 
     try {
-      const response = await fetch('http://localhost:8000/api/upscale', {
+      const response = await fetch(`${API_BASE}/api/upscale`, {
         method: 'POST',
         body: formData
       });
@@ -69,13 +71,13 @@ function App() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/jobs/${jobId}`);
+        const res = await fetch(`${API_BASE}/api/jobs/${jobId}`);
         if (!res.ok) throw new Error('Failed to fetch job status');
         const data = await res.json();
         
         setStatus(data.status);
         if (data.status === 'done') {
-          setResultUrl(`http://localhost:8000${data.result_url}`);
+          setResultUrl(`${API_BASE}${data.result_url}`);
           clearInterval(interval);
         } else if (data.status === 'failed') {
           setErrorMsg(data.error || 'Upscaling failed');
