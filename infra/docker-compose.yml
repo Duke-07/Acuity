@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: 
+      context: ../backend
+      dockerfile: ../infra/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_DIR=/models
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../models:/models
+      - ../uploads:/app/uploads
+      - ../outputs:/app/outputs
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  worker:
+    build: 
+      context: ../backend
+      dockerfile: ../infra/Dockerfile.backend
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info"]
+    environment:
+      - MODEL_DIR=/models
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../models:/models
+      - ../uploads:/app/uploads
+      - ../outputs:/app/outputs
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../infra/Dockerfile.frontend
+    ports:
+      - "80:80"
