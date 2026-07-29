@@ -12,7 +12,7 @@ function App() {
   const [faceEnhance, setFaceEnhance] = useState(false);
   
   const [jobId, setJobId] = useState(null);
-  const [status, setStatus] = useState('idle'); // idle, uploading, queued, processing, done, failed
+  const [status, setStatus] = useState('idle');
   const [resultUrl, setResultUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -31,7 +31,7 @@ function App() {
     onDrop,
     accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [] },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024 // 10MB
+    maxSize: 10 * 1024 * 1024
   });
 
   const handleUpscale = async () => {
@@ -45,8 +45,6 @@ function App() {
     formData.append('face_enhance', faceEnhance);
 
     try {
-      // In a real deployed environment, use the actual backend domain/IP.
-      // For local dev, proxy via Vite or relative if hosted together.
       const response = await fetch('http://localhost:8000/api/upscale', {
         method: 'POST',
         body: formData
@@ -102,7 +100,6 @@ function App() {
 
       <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* Controls Panel */}
         <div className="md:col-span-1 bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700/50">
           
           <div className="mb-6">
@@ -166,10 +163,8 @@ function App() {
           )}
         </div>
 
-        {/* Viewport */}
         <div className="md:col-span-2 flex flex-col gap-4">
           
-          {/* Dropzone / Preview */}
           {!resultUrl ? (
             <div 
               {...getRootProps()} 
@@ -201,7 +196,6 @@ function App() {
             </div>
           )}
 
-          {/* Download Button */}
           {resultUrl && (
             <div className="flex justify-end">
               <a 

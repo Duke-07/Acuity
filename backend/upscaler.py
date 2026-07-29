@@ -102,7 +102,6 @@ class SwinIRUpscaler(Upscaler):
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        # SwinIR-L parameters
         self.model = SwinIR(upscale=4, in_chans=3, img_size=64, window_size=8,
                        img_range=1., depths=[6, 6, 6, 6, 6, 6, 6, 6, 6], embed_dim=240,
                        num_heads=[8, 8, 8, 8, 8, 8, 8, 8, 8],
@@ -120,15 +119,12 @@ class SwinIRUpscaler(Upscaler):
         if self.model is None:
             self.load()
 
-        # OpenCV is BGR, we need RGB for SwinIR, range [0, 1]
         img_lq = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         img_lq = img_lq.astype(np.float32) / 255.
         
-        # HWC to CHW
         img_lq = np.transpose(img_lq if img_lq.shape[2] == 1 else img_lq[:, :, [0, 1, 2]], (2, 0, 1))
         img_lq = torch.from_numpy(img_lq).float().unsqueeze(0).to(self.device)
 
-        # Tiled inference
         window_size = 8
         tile = 400
         tile_overlap = 32
@@ -146,7 +142,6 @@ class SwinIRUpscaler(Upscaler):
                 for w_idx in w_idx_list:
                     in_patch = img_lq[..., h_idx:h_idx+tile, w_idx:w_idx+tile]
                     
-                    # Pad to multiple of window_size
                     _, _, h_in, w_in = in_patch.shape
                     pad_h = (window_size - h_in % window_size) % window_size
                     pad_w = (window_size - w_in % window_size) % window_size
@@ -154,7 +149,6 @@ class SwinIRUpscaler(Upscaler):
                     
                     out_patch = self.model(in_patch)
                     
-                    # Crop back if padded
                     out_patch = out_patch[..., :h_in*self.scale, :w_in*self.scale]
                     
                     out_patch_mask = torch.ones_like(out_patch)
@@ -169,7 +163,6 @@ class SwinIRUpscaler(Upscaler):
             output = np.transpose(output[[0, 1, 2], :, :], (1, 2, 0))
         output = (output * 255.0).round().astype(np.uint8)
         
-        # RGB to BGR
         output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
         
         if scale != self.scale:

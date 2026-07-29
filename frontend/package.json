@@ -17,7 +17,7 @@
     "react-compare-slider": "^4.0.0",
     "react-dom": "^19.2.7",
     "react-dropzone": "^19.1.1",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

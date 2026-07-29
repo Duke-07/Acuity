@@ -1,6 +1,5 @@
 FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
-# Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
@@ -10,16 +9,13 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir setuptools numpy opencv-python-headless
 RUN pip install --no-cache-dir basicsr --no-build-isolation
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
 COPY . .
 
-# Ensure entrypoint is executable
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000

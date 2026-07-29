@@ -43,7 +43,6 @@ async def upscale(
     with open(input_path, "wb") as f:
         f.write(file_bytes)
 
-    # Dispatch to Celery
     task = upscale_image_task.apply_async(
         args=[job_id, input_path, output_path, model, scale, face_enhance],
         task_id=job_id

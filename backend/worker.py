@@ -16,7 +16,6 @@ celery_app.conf.beat_schedule = {
     },
 }
 
-# Global upscaler instances loaded once per worker process
 upscalers = {}
 
 def get_upscaler(model_name="realesrgan"):
