@@ -16,7 +16,11 @@ def get_upscaler(model_name="realesrgan"):
             up = RealESRGANUpscaler()
             up.load()
             upscalers[model_name] = up
-        # SwinIR will be added in step 5
+        elif model_name == "swinir":
+            from upscaler import SwinIRUpscaler
+            up = SwinIRUpscaler()
+            up.load()
+            upscalers[model_name] = up
         else:
             raise ValueError(f"Unknown model {model_name}")
     return upscalers[model_name]
