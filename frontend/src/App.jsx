@@ -93,23 +93,23 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-8 font-sans">
-      <header className="mb-12 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+      <header className="mb-14 text-center">
+        <h1 className="text-5xl font-extrabold tracking-tighter text-white mb-3 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-2xl">
           Acuity
         </h1>
-        <p className="text-gray-400">AI Image Upscaling</p>
+        <p className="text-gray-400 text-lg tracking-wide font-light">High-Fidelity AI Image Upscaling</p>
       </header>
 
       <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        <div className="md:col-span-1 bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700/50">
+        <div className="md:col-span-1 bg-gray-800/60 backdrop-blur-xl rounded-2xl p-6 shadow-[0_0_40px_rgba(139,92,246,0.15)] border border-gray-700/50">
           
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-300 mb-2">AI Model</label>
             <select 
               value={model} 
               onChange={e => setModel(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-gray-900/80 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-shadow"
             >
               <option value="realesrgan">Real-ESRGAN (General)</option>
               <option value="realesrgan_anime">Real-ESRGAN (Anime)</option>
@@ -149,7 +149,7 @@ function App() {
           <button
             onClick={handleUpscale}
             disabled={!file || status === 'uploading' || status === 'queued' || status === 'processing'}
-            className="w-full py-3 rounded-lg font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex justify-center items-center gap-2"
+            className="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] flex justify-center items-center gap-2 tracking-wide"
           >
             {status === 'uploading' && <Loader2 className="animate-spin" size={20} />}
             {status === 'queued' && <Loader2 className="animate-spin" size={20} />}
@@ -170,8 +170,8 @@ function App() {
           {!resultUrl ? (
             <div 
               {...getRootProps()} 
-              className={`flex flex-col items-center justify-center w-full h-[500px] border-2 border-dashed rounded-2xl transition-colors cursor-pointer overflow-hidden ${
-                isDragActive ? 'border-purple-500 bg-purple-500/10' : 'border-gray-600 bg-gray-800/50 hover:bg-gray-800'
+              className={`flex flex-col items-center justify-center w-full h-[500px] border-2 border-dashed rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden ${
+                isDragActive ? 'border-cyan-400 bg-cyan-500/10 shadow-[0_0_30px_rgba(34,211,238,0.2)]' : 'border-gray-600 bg-gray-800/40 hover:bg-gray-800/60 hover:border-purple-500/50'
               }`}
             >
               <input {...getInputProps()} />
@@ -187,7 +187,7 @@ function App() {
               )}
             </div>
           ) : (
-            <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-gray-700 relative">
+            <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-gray-700/80 relative">
               <ReactCompareSlider
                 itemOne={<ReactCompareSliderImage src={previewUrl} alt="Original" />}
                 itemTwo={<ReactCompareSliderImage src={resultUrl} alt="Upscaled" />}
@@ -203,7 +203,7 @@ function App() {
               <a 
                 href={resultUrl} 
                 download
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors border border-gray-700 shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white font-medium rounded-xl transition-all border border-gray-600 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]"
               >
                 <Download size={18} />
                 Download Result
