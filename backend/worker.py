@@ -7,6 +7,15 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 celery_app = Celery("acuity_worker", broker=REDIS_URL, backend=REDIS_URL)
 
+from celery.schedules import crontab
+
+celery_app.conf.beat_schedule = {
+    'cleanup-every-hour': {
+        'task': 'cleanup_task',
+        'schedule': crontab(minute=0, hour='*'),
+    },
+}
+
 # Global upscaler instances loaded once per worker process
 upscalers = {}
 
@@ -33,9 +42,23 @@ def upscale_image_task(job_id: str, input_path: str, output_path: str, model_nam
             raise ValueError("Failed to load image")
             
         upscaler = get_upscaler(model_name)
-        out_img = upscaler.upscale(img, scale=scale)
+        out_img = upscaler.upscale(img, scale=scale, face_enhance=face_enhance)
         
         cv2.imwrite(output_path, out_img)
         return {"status": "done", "result_url": f"/api/download/{job_id}"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
+
+@celery_app.task(name="cleanup_task")
+def cleanup_task():
+    import time
+    now = time.time()
+    for directory in ["uploads", "outputs"]:
+        if os.path.exists(directory):
+            for f in os.listdir(directory):
+                path = os.path.join(directory, f)
+                if os.stat(path).st_mtime < now - 24 * 3600:
+                    try:
+                        os.remove(path)
+                    except:
+                        pass

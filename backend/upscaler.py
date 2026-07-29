@@ -12,7 +12,7 @@ class Upscaler(ABC):
         pass
 
     @abstractmethod
-    def upscale(self, image: np.ndarray, scale: int) -> np.ndarray:
+    def upscale(self, image: np.ndarray, scale: int, face_enhance: bool = False) -> np.ndarray:
         pass
 
 def download_model(url: str, dest_path: str):
@@ -66,11 +66,24 @@ class RealESRGANUpscaler(Upscaler):
         )
         print(f"RealESRGAN loaded on {device}")
 
-    def upscale(self, image: np.ndarray, scale: int) -> np.ndarray:
+    def upscale(self, image: np.ndarray, scale: int, face_enhance: bool = False) -> np.ndarray:
         if self.upsampler is None:
             self.load()
         
         output, _ = self.upsampler.enhance(image, outscale=scale)
+
+        if face_enhance:
+            from gfpgan import GFPGANer
+            if not hasattr(self, 'face_enhancer'):
+                self.face_enhancer = GFPGANer(
+                    model_path=os.path.join(self.model_dir, "GFPGANv1.3.pth"),
+                    upscale=scale,
+                    arch='clean',
+                    channel_multiplier=2,
+                    bg_upsampler=self.upsampler
+                )
+            _, _, output = self.face_enhancer.enhance(output, has_aligned=False, only_center_face=False, paste_back=True)
+            
         return output
 
 class SwinIRUpscaler(Upscaler):
@@ -103,7 +116,7 @@ class SwinIRUpscaler(Upscaler):
         self.model = self.model.to(self.device)
         print(f"SwinIR loaded on {self.device}")
 
-    def upscale(self, image: np.ndarray, scale: int) -> np.ndarray:
+    def upscale(self, image: np.ndarray, scale: int, face_enhance: bool = False) -> np.ndarray:
         if self.model is None:
             self.load()
 
@@ -159,9 +172,20 @@ class SwinIRUpscaler(Upscaler):
         # RGB to BGR
         output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
         
-        # If requested scale is different from model scale (4), resize
         if scale != self.scale:
             h_out, w_out = output.shape[:2]
             output = cv2.resize(output, (int(w_out * scale / self.scale), int(h_out * scale / self.scale)), interpolation=cv2.INTER_LANCZOS4)
             
+        if face_enhance:
+            from gfpgan import GFPGANer
+            if not hasattr(self, 'face_enhancer'):
+                self.face_enhancer = GFPGANer(
+                    model_path=os.path.join(self.model_dir, "GFPGANv1.3.pth"),
+                    upscale=scale,
+                    arch='clean',
+                    channel_multiplier=2,
+                    bg_upsampler=None
+                )
+            _, _, output = self.face_enhancer.enhance(output, has_aligned=False, only_center_face=False, paste_back=True)
+
         return output
