@@ -1,9 +1,11 @@
 import os
 import uuid
-from fastapi import FastAPI, UploadFile, Form, HTTPException
+from fastapi import FastAPI, UploadFile, Form, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
+import os
+import uuid
 from worker import celery_app, upscale_image_task
 from celery.result import AsyncResult
 
@@ -22,9 +24,13 @@ OUTPUT_DIR = "outputs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# For local testing without Redis
+LOCAL_JOBS = {}
+
 @app.post("/api/upscale")
 async def upscale(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     model: str = Form("realesrgan"),
     scale: int = Form(4),
     face_enhance: bool = Form(False)
@@ -43,15 +49,34 @@ async def upscale(
     with open(input_path, "wb") as f:
         f.write(file_bytes)
 
-    task = upscale_image_task.apply_async(
-        args=[job_id, input_path, output_path, model, scale, face_enhance],
-        task_id=job_id
-    )
+    if os.environ.get("SYNC_MODE") == "1":
+        LOCAL_JOBS[job_id] = "processing"
+        
+        def run_sync():
+            try:
+                upscale_image_task(job_id, input_path, output_path, model, scale, face_enhance)
+                LOCAL_JOBS[job_id] = "done"
+            except Exception as e:
+                print(f"Error in sync mode: {e}")
+                LOCAL_JOBS[job_id] = "failed"
+                
+        background_tasks.add_task(run_sync)
+    else:
+        task = upscale_image_task.apply_async(
+            args=[job_id, input_path, output_path, model, scale, face_enhance],
+            task_id=job_id
+        )
 
     return {"job_id": job_id}
 
 @app.get("/api/jobs/{job_id}")
 async def get_job(job_id: str):
+    if os.environ.get("SYNC_MODE") == "1":
+        state = LOCAL_JOBS.get(job_id, "unknown")
+        if state == "done":
+            return {"status": "done", "result_url": f"/api/download/{job_id}"}
+        return {"status": state}
+
     res = AsyncResult(job_id, app=celery_app)
     if res.state == 'PENDING':
         return {"status": "queued"}
