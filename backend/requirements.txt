@@ -1,0 +1,14 @@
+torch
+torchvision
+realesrgan
+git+https://github.com/xinntao/BasicSR.git
+gfpgan
+fastapi
+celery
+redis
+python-multipart
+pillow
+opencv-python-headless
+httpx
+pytest
+pytest-asyncio
